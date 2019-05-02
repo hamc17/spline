@@ -13,27 +13,21 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import { Component, Input } from '@angular/core';
-import { Expression } from 'src/app/model/expression';
-import { getIconFromOperationType, getColorFromOperationType } from 'src/app/store/reducers/execution-plan.reducer';
+import * as ErrorAction from '../actions/error.actions';
 
-@Component({
-  selector: 'app-expression',
-  template: ''
-})
-export class ExpressionComponent {
+export type Action = ErrorAction.ErrorActions
 
-  @Input()
-  expressionType: string
+export function errorReducer(state: string, action: Action) {
+    switch (action.type) {
+        case ErrorAction.ErrorActionTypes.ERROR_GET: return getTextError(action.payload)
+        default: return state
+    }
+}
 
-  @Input()
-  expressions: Expression[]
-
-  getIcon(): string {
-    return String.fromCharCode(getIconFromOperationType(this.expressionType))
-  }
-
-  getOperationColor(): string {
-    return getColorFromOperationType(this.expressionType)
-  }
+function getTextError(httpCode: string): string {
+    let codeNumber = Number(httpCode)
+    switch (codeNumber) {
+        case 404: return "404 ! Could not find the requested lineage"
+        default: return "OUPS, Something went wrong !"
+    }
 }

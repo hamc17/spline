@@ -13,27 +13,25 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import { Component, Input } from '@angular/core';
-import { Expression } from 'src/app/model/expression';
-import { getIconFromOperationType, getColorFromOperationType } from 'src/app/store/reducers/execution-plan.reducer';
 
-@Component({
-  selector: 'app-expression',
-  template: ''
-})
-export class ExpressionComponent {
+import { Action } from '@ngrx/store';
+import { AttributeVM } from '../../model/viewModels/attributeVM';
 
-  @Input()
-  expressionType: string
-
-  @Input()
-  expressions: Expression[]
-
-  getIcon(): string {
-    return String.fromCharCode(getIconFromOperationType(this.expressionType))
-  }
-
-  getOperationColor(): string {
-    return getColorFromOperationType(this.expressionType)
-  }
+export enum AttributesActionTypes {
+    ATTRIBUTES_GET = '[Attribute] Get',
+    ATTRIBUTES_RESET = '[Attribute] Reset'
 }
+
+export class Get implements Action {
+    readonly type = AttributesActionTypes.ATTRIBUTES_GET
+    constructor(public payload: AttributeVM) { }
+}
+
+export class Reset implements Action {
+    readonly type = AttributesActionTypes.ATTRIBUTES_RESET
+    constructor() { }
+}
+
+export type AttributeActions
+    = Get
+    | Reset

@@ -13,22 +13,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import { Component } from '@angular/core';
-import { Store } from '@ngrx/store';
-import { AppState } from 'src/app/model/app-state';
 
-@Component({
-  selector: 'lineage-details',
-  templateUrl: './lineage-details.component.html',
-  styleUrls: ['./lineage-details.component.less']
-})
-export class LineageDetailsComponent {
-
-  constructor(
-    private store: Store<AppState>
-  ) { }
-
-  getDetailsInfo() {
-    return this.store.select('detailsInfos')
-  }
+export const enum AttributeType {
+    Struct = "StructDataType",
+    Array = "ArrayDataType",
+    Simple = "SimpleDataType"
 }

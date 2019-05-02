@@ -1,5 +1,5 @@
 /*
- * Copyright 2017 ABSA Group Limited
+ * Copyright 2019 ABSA Group Limited
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,22 +13,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import { Component } from '@angular/core';
-import { Store } from '@ngrx/store';
-import { AppState } from 'src/app/model/app-state';
+import * as ConfigAction from '../actions/config.actions';
 
-@Component({
-  selector: 'lineage-details',
-  templateUrl: './lineage-details.component.html',
-  styleUrls: ['./lineage-details.component.less']
-})
-export class LineageDetailsComponent {
+export type Action = ConfigAction.ConfigActions
 
-  constructor(
-    private store: Store<AppState>
-  ) { }
-
-  getDetailsInfo() {
-    return this.store.select('detailsInfos')
-  }
+export function configReducer(state: any, action: Action) {
+    switch (action.type) {
+        case ConfigAction.ConfigActionTypes.CONFIG_GET_SUCCESS: return { ...state, ...action.payload }
+        default: return state
+    }
 }

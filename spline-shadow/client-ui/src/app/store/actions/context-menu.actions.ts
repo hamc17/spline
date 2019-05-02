@@ -1,5 +1,5 @@
 /*
- * Copyright 2017 ABSA Group Limited
+ * Copyright 2019 ABSA Group Limited
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,22 +13,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import { Component } from '@angular/core';
-import { Store } from '@ngrx/store';
-import { AppState } from 'src/app/model/app-state';
 
-@Component({
-  selector: 'lineage-details',
-  templateUrl: './lineage-details.component.html',
-  styleUrls: ['./lineage-details.component.less']
-})
-export class LineageDetailsComponent {
+import { Action } from '@ngrx/store';
 
-  constructor(
-    private store: Store<AppState>
-  ) { }
-
-  getDetailsInfo() {
-    return this.store.select('detailsInfos')
-  }
+export enum ContextMenuActionTypes {
+    CONTEXT_MENU_GET = '[Context Menu] Get',
 }
+
+export class Get implements Action {
+    readonly type = ContextMenuActionTypes.CONTEXT_MENU_GET
+}
+export type ContextMenuActions
+    = Get

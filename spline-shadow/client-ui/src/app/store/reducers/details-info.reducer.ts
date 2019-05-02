@@ -13,27 +13,16 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import { Component, Input } from '@angular/core';
-import { Expression } from 'src/app/model/expression';
-import { getIconFromOperationType, getColorFromOperationType } from 'src/app/store/reducers/execution-plan.reducer';
+import * as DetailsInfoAction from '../actions/details-info.actions';
+import { OperationDetailsVM } from '../../model/viewModels/operationDetailsVM';
 
-@Component({
-  selector: 'app-expression',
-  template: ''
-})
-export class ExpressionComponent {
+export type Action = DetailsInfoAction.DetailsInfoActions
 
-  @Input()
-  expressionType: string
+export function detailsInfoReducer(state: OperationDetailsVM, action: Action) {
+    switch (action.type) {
+        case DetailsInfoAction.DetailsInfoActionTypes.DETAILS_INFOS_GET_SUCCESS: return { ...state, ...action.payload }
+        case DetailsInfoAction.DetailsInfoActionTypes.DETAILS_INFOS_RESET: return null
+        default: return state
 
-  @Input()
-  expressions: Expression[]
-
-  getIcon(): string {
-    return String.fromCharCode(getIconFromOperationType(this.expressionType))
-  }
-
-  getOperationColor(): string {
-    return getColorFromOperationType(this.expressionType)
-  }
+    }
 }

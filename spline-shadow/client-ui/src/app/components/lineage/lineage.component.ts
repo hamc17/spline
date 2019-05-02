@@ -14,18 +14,11 @@
  * limitations under the License.
  */
 
-import { Component, OnInit } from '@angular/core';
+import { Component } from '@angular/core';
 
 @Component({
   selector: 'app-lineage',
   templateUrl: './lineage.component.html',
   styleUrls: ['./lineage.component.less']
 })
-export class LineageComponent implements OnInit {
-
-  constructor() { }
-
-  ngOnInit() {
-  }
-
-}
+export class LineageComponent { }

@@ -15,8 +15,9 @@
  */
 
 import { Component, OnInit } from '@angular/core';
-import { ActivatedRoute } from '@angular/router';
-import { ErrorService } from 'src/app/services/error/error.service';
+import { Store } from '@ngrx/store';
+import { Get } from 'src/app/store/actions/error.actions';
+import { AppState } from 'src/app/model/app-state';
 
 @Component({
   selector: 'app-error',
@@ -25,13 +26,20 @@ import { ErrorService } from 'src/app/services/error/error.service';
 })
 export class ErrorComponent implements OnInit {
 
-  errorText: string
-
-  constructor(private route: ActivatedRoute, private errorService: ErrorService) { }
+  constructor(
+    private store: Store<AppState>
+  ) { }
 
   ngOnInit() {
-    let httpCode = this.route.snapshot.paramMap.get("httpCode")
-    this.errorText = this.errorService.getTextError(httpCode)
+    this.store.select('router', 'state', 'params').subscribe(
+      params => {
+        this.store.dispatch(new Get(params.httpCode))
+      }
+    )
+  }
+
+  getError() {
+    return this.store.select('error')
   }
 
 }

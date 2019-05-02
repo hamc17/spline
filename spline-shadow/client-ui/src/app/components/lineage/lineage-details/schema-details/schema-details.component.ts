@@ -13,16 +13,20 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import { Component, ComponentFactoryResolver, ViewContainerRef, AfterViewInit, ViewChildren, QueryList, ChangeDetectorRef, Input } from '@angular/core';
-import { LineageGraphService } from 'src/app/services/lineage/lineage-graph.service';
-import { OperationType, ExpressionComponents } from 'src/app/types/operationType';
-import { IExpression, ILiteral, IBinary, IAttrRef, IAlias, IUDF, IGenericLeaf, IGeneric } from 'src/app/viewModels/expression-model';
+import { Component, ComponentFactoryResolver, ViewContainerRef, AfterViewInit, ViewChildren, QueryList, ChangeDetectorRef, Input, OnInit } from '@angular/core';
+import { OperationType, ExpressionComponents } from 'src/app/model/types/operationType';
+import { IExpression, ILiteral, IBinary, IAttrRef, IAlias, IUDF, IGenericLeaf, IGeneric } from 'src/app/model/expression-model';
 import * as _ from 'lodash';
-import { Expression } from 'src/app/viewModels/expression';
-import { ExpressionType } from 'src/app/types/expressionType';
-import { ExecutedLogicalPlanVM } from 'src/app/viewModels/executedLogicalPlanVM';
-import { OperationDetailsVM } from 'src/app/viewModels/operationDetailsVM';
-import { AttributeVM } from 'src/app/viewModels/attributeVM';
+import { Expression } from 'src/app/model/expression';
+import { ExpressionType } from 'src/app/model/types/expressionType';
+import { ExecutedLogicalPlanVM } from 'src/app/model/viewModels/executedLogicalPlanVM';
+import { OperationDetailsVM } from 'src/app/model/viewModels/operationDetailsVM';
+import { AttributeVM } from 'src/app/model/viewModels/attributeVM';
+import { Store } from '@ngrx/store';
+import { AppState } from 'src/app/model/app-state';
+import { Observable } from 'rxjs';
+import { map, switchMap } from 'rxjs/operators';
+import { getIconFromOperationType, getColorFromOperationType } from 'src/app/store/reducers/execution-plan.reducer';
 
 
 @Component({
@@ -30,81 +34,85 @@ import { AttributeVM } from 'src/app/viewModels/attributeVM';
   templateUrl: './schema-details.component.html',
   styleUrls: ['./schema-details.component.less']
 })
-export class SchemaDetailsComponent implements AfterViewInit {
+export class SchemaDetailsComponent implements OnInit, AfterViewInit {
 
   @ViewChildren('expressionPanel', { read: ViewContainerRef })
   expressionPanel: QueryList<ViewContainerRef>
 
   constructor(
-    private lineageGraphService: LineageGraphService,
     private componentFactoryResolver: ComponentFactoryResolver,
-    private changedetectorRef: ChangeDetectorRef
+    private changedetectorRef: ChangeDetectorRef,
+    private store: Store<AppState>
   ) { }
 
+  ngOnInit(): void {
+
+  }
+
   ngAfterViewInit(): void {
-    this.expressionPanel.changes.subscribe(_ => {
-      const container = this.expressionPanel.first
-      if (container) {
-        container.remove(0)
-      }
-      const type = this.getType()
-      if (type) {
-        const factory = this.componentFactoryResolver.resolveComponentFactory(ExpressionComponents.get(type))
-        let instance = container.createComponent(factory).instance
-        instance.expressions = this.getExpressions(this.getDetails())
-        instance.expressionType = type
-        this.changedetectorRef.detectChanges()
-      }
-    })
+    this.expressionPanel.changes.pipe(
+      switchMap(_ => {
+        return this.store.select('detailsInfos')
+      }),
+      map(opDetails => {
+        const container = this.expressionPanel.first
+        if (container && opDetails) {
+          container.remove(0)
+          const type = opDetails.operation.name
+          const factory = this.componentFactoryResolver.resolveComponentFactory(ExpressionComponents.get(type))
+          let instance = container.createComponent(factory).instance
+          instance.expressions = this.getExpressions(opDetails)
+          instance.expressionType = type
+          this.changedetectorRef.detectChanges()
+        }
+        return opDetails
+      })
+    )
   }
 
-  getDetails(): OperationDetailsVM {
-    return this.lineageGraphService.detailsInfo
+  getDetailsInfo(): Observable<OperationDetailsVM> {
+    return this.store.select('detailsInfos')
   }
 
-  getIcon(): string {
-    return this.getDetails()
-      ? String.fromCharCode(this.lineageGraphService.getIconFromOperationType(this.getType()))
-      : undefined
+  getExecutionPlanVM(): Observable<ExecutedLogicalPlanVM> {
+    return this.store.select('executedLogicalPlan')
   }
 
-  getOperationColor(): string {
-    return this.getDetails()
-      ? this.lineageGraphService.getColorFromOperationType(this.getType())
-      : undefined
+  getIcon(operationName: string): string {
+    return String.fromCharCode(getIconFromOperationType(operationName))
   }
 
-  getType(property?: any): string {
-    return property
-      ? property._type
-      : this.getDetails()
-        ? this.getDetails().operation.name
-        : undefined
+  getOperationColor(operationName: string): string {
+    return getColorFromOperationType(operationName)
   }
 
-  getExpressions(property: any): Expression[] {
+  getType(attribute?: any): string {
+    return attribute._type
+  }
+
+  getExpressions(attribute: any): Expression[] {
     let expressions = []
-    switch (this.getType(property)) {
+    switch (attribute._type) {
       case OperationType.Join:
         // Build the join expression
-        const title = property.joinType
-        const values = [property.condition.text]
+        const title = attribute.joinType
+        const values = [attribute.condition.text]
         const expression = new Expression(title, values)
         expressions.push(expression)
         break
       case OperationType.Projection:
         // Build the transformations expressions
-        if (property.transformations) {
+        if (attribute.transformations) {
           const title = "Transformations"
           const values = new Array()
-          property.transformations.forEach(transformation => values.push(this.getText(transformation)))
+          attribute.transformations.forEach(transformation => values.push(this.getText(transformation)))
           const transformationExpression: Expression = new Expression(title, values)
           expressions.push(transformationExpression)
         }
         // Build the dropped Attributes expressions
         let inputs = []
-        _.each(property.inputs, schemaIndex => inputs = _.concat(inputs, property.schemas[schemaIndex]))
-        const output = property.schemas[property.output]
+        _.each(attribute.inputs, schemaIndex => inputs = _.concat(inputs, attribute.schemas[schemaIndex]))
+        const output = attribute.schemas[attribute.output]
         const diff = _.differenceBy(inputs, output, 'name')
         if (diff.length > 0) {
           const title = "Dropped Attributes"
@@ -175,11 +183,11 @@ export class SchemaDetailsComponent implements AfterViewInit {
     }
   }
 
-  getInputSchemas(): AttributeVM[] {
-    if (this.getDetails()) {
+  getInputSchemas(operationDetails: OperationDetailsVM): AttributeVM[] {
+    if (operationDetails) {
       let inputSchemas = []
-      this.getDetails().inputs.forEach(input => {
-        inputSchemas.push(this.getDetails().schemas[input])
+      operationDetails.inputs.forEach(input => {
+        inputSchemas.push(operationDetails.schemas[input])
       })
       return inputSchemas
     } else {
@@ -187,12 +195,9 @@ export class SchemaDetailsComponent implements AfterViewInit {
     }
   }
 
-  getOutputSchema(): AttributeVM[] {
-    return this.getDetails() ? this.getDetails().schemas[this.getDetails().output] : null
+  getOutputSchema(operationDetails: OperationDetailsVM): AttributeVM[] {
+    return operationDetails ? operationDetails.schemas[operationDetails.output] : null
   }
 
-  getExecutionPlanVM(): ExecutedLogicalPlanVM {
-    return this.lineageGraphService.executedLogicalPlan
-  }
 }
 

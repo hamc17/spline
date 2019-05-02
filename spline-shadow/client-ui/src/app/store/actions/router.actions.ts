@@ -1,5 +1,5 @@
 /*
- * Copyright 2017 ABSA Group Limited
+ * Copyright 2019 ABSA Group Limited
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,22 +13,24 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import { Component } from '@angular/core';
-import { Store } from '@ngrx/store';
-import { AppState } from 'src/app/model/app-state';
+import { Action } from "@ngrx/store";
+import { Params } from "@angular/router";
 
-@Component({
-  selector: 'lineage-details',
-  templateUrl: './lineage-details.component.html',
-  styleUrls: ['./lineage-details.component.less']
-})
-export class LineageDetailsComponent {
-
-  constructor(
-    private store: Store<AppState>
-  ) { }
-
-  getDetailsInfo() {
-    return this.store.select('detailsInfos')
-  }
+export enum RouterActionTypes {
+    GO = "[Router] Go",
+    MERGE_PARAMS = "[Router] Merge Params"
 }
+
+export class Go implements Action {
+    readonly type = RouterActionTypes.GO
+    constructor(public payload: Params) { }
+}
+
+export class MergeParams implements Action {
+    readonly type = RouterActionTypes.MERGE_PARAMS
+    constructor(public payload: Params) { }
+}
+
+export type RouterActions
+    = Go
+    | MergeParams

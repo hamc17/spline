@@ -13,22 +13,16 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import { Component } from '@angular/core';
-import { Store } from '@ngrx/store';
-import { AppState } from 'src/app/model/app-state';
 
-@Component({
-  selector: 'lineage-details',
-  templateUrl: './lineage-details.component.html',
-  styleUrls: ['./lineage-details.component.less']
-})
-export class LineageDetailsComponent {
+ .attribute-title{
+    font-weight: bold;
+    font-size: 20px;
+    color:#e39255;
+ }
 
-  constructor(
-    private store: Store<AppState>
-  ) { }
-
-  getDetailsInfo() {
-    return this.store.select('detailsInfos')
-  }
+ 
+cytoscape-ng {
+    height:58vh;
+    float: left;
+    width:100%;
 }
